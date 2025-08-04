@@ -1,6 +1,6 @@
 <?php
 
-interface iCart
+interface CartInterface
 {
     public function calcVat();
 
@@ -9,7 +9,7 @@ interface iCart
     public function makeOrder(float $discount = 1);
 }
 
-class Cart implements iCart
+class Cart implements CartInterface
 {
     /** Множитель для нахождения цены с НДС. */
     private const float NDS_PRICE = 1.18;
@@ -22,6 +22,10 @@ class Cart implements iCart
 
     /** Заказ на основе текущей корзины. */
     public ?Order $order = null;
+
+    public function __construct(
+        private readonly MailerInterface $mailer
+    ) {}
 
     /**
      * Нахождение суммы НДС от `$this->items`.
@@ -40,8 +44,7 @@ class Cart implements iCart
      */
     public function notify(): void
     {
-        $mailer = new SimpleMailer('cartuser', 'j049lj-01');
-        $mailer->sendToManagers(sprintf(
+        $this->mailer->sendToManagers(sprintf(
             "<p><b>%s</b>%.3f</p>",
             $this->order->id(),
             $this->computeItemsSum()
